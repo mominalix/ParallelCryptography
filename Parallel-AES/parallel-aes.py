@@ -2,90 +2,83 @@ import os
 import sys
 import multiprocessing
 from Crypto.Cipher import AES
+import secrets
 from Crypto.Random import get_random_bytes
+from multiprocessing import Pool
+from functools import partial
 
-def encrypt_chunk(key, chunk, output_queue):
-    cipher = AES.new(key, AES.MODE_EAX)
-    nonce = cipher.nonce
+def encrypt_chunk(key, chunk, nonce):
+    cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
     ciphertext, tag = cipher.encrypt_and_digest(chunk)
-    output_queue.put((nonce, ciphertext, tag))
+    return (nonce, ciphertext, tag)
 
-def decrypt_chunk(key, nonce, ciphertext, tag, output_queue):
-    cipher = AES.new(key, AES.MODE_EAX, nonce=nonce)
+def decrypt_chunk(key, ciphertext, nonce, tag):
+    cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
     plaintext = cipher.decrypt_and_verify(ciphertext, tag)
-    output_queue.put(plaintext)
+    return plaintext
 
 def parallel_encrypt(input_file, output_file, key):
     chunk_size = 64 * 1024  # Adjust as needed
-    input_queue = multiprocessing.Queue()
-    output_queue = multiprocessing.Queue()
 
-    # Create worker processes for encryption
+    # Generate a random nonce for each chunk
+    nonces = [get_random_bytes(16) for _ in range(multiprocessing.cpu_count())]
+
+    # Create a pool of worker processes for encryption
     num_processes = multiprocessing.cpu_count()
-    processes = []
-    for _ in range(num_processes):
-        process = multiprocessing.Process(target=encrypt_chunk, args=(key, input_queue.get(), output_queue))
-        processes.append(process)
-        process.start()
+    pool = Pool(processes=num_processes)
 
-    # Read and split the input file into chunks and put them in the input queue
+    # Read and split the input file into chunks
     with open(input_file, 'rb') as f:
+        chunks = []
         while True:
             chunk = f.read(chunk_size)
             if not chunk:
                 break
-            input_queue.put(chunk)
+            chunks.append(chunk)
 
-    # Close the input queue to signal workers to finish
-    for _ in range(num_processes):
-        input_queue.put(None)
+    # Use functools.partial to pass key to encrypt_chunk
+    encrypt_chunk_with_key = partial(encrypt_chunk, key)
 
-    # Wait for encryption processes to finish
-    for process in processes:
-        process.join()
+    # Encrypt chunks in parallel
+    encrypted_chunks = pool.starmap(encrypt_chunk_with_key, [(chunk, nonce) for chunk, nonce in zip(chunks, nonces)])
 
     # Write encrypted data to the output file
     with open(output_file, 'wb') as f:
-        while not output_queue.empty():
-            nonce, ciphertext, tag = output_queue.get()
+        for nonce, ciphertext, tag in encrypted_chunks:
             f.write(nonce + ciphertext + tag)
+
+    pool.close()
+    pool.join()
 
 def parallel_decrypt(input_file, output_file, key):
     chunk_size = 64 * 1024  # Adjust as needed
-    input_queue = multiprocessing.Queue()
-    output_queue = multiprocessing.Queue()
 
-    # Create worker processes for decryption
+    # Create a pool of worker processes for decryption
     num_processes = multiprocessing.cpu_count()
-    processes = []
-    for _ in range(num_processes):
-        process = multiprocessing.Process(target=decrypt_chunk, args=(key, *input_queue.get(), output_queue))
-        processes.append(process)
-        process.start()
+    pool = Pool(processes=num_processes)
 
-    # Read and split the input file into chunks and put them in the input queue
+    # Read the input file
     with open(input_file, 'rb') as f:
-        while True:
-            nonce = f.read(16)
-            ciphertext = f.read(chunk_size - 16 - 16)  # Nonce + Ciphertext + Tag
-            tag = f.read(16)
-            if not ciphertext:
-                break
-            input_queue.put((nonce, ciphertext, tag))
+        data = f.read()
 
-    # Close the input queue to signal workers to finish
-    for _ in range(num_processes):
-        input_queue.put(None)
+    # Extract nonces, ciphertexts, and tags
+    nonces = [data[i:i+16] for i in range(0, len(data), chunk_size)]
+    ciphertexts = [data[i+16:i+chunk_size-16] for i in range(0, len(data), chunk_size)]
+    tags = [data[i+chunk_size-16:i+chunk_size] for i in range(0, len(data), chunk_size)]
 
-    # Wait for decryption processes to finish
-    for process in processes:
-        process.join()
+    # Use functools.partial to pass key to decrypt_chunk
+    decrypt_chunk_with_key = partial(decrypt_chunk, key)
+
+    # Decrypt chunks in parallel
+    plaintext_chunks = pool.starmap(decrypt_chunk_with_key, zip(ciphertexts, nonces, tags))
 
     # Write decrypted data to the output file
     with open(output_file, 'wb') as f:
-        while not output_queue.empty():
-            plaintext = output_queue.get()
-            f.write(plaintext)
+        for plaintext_chunk in plaintext_chunks:
+            f.write(plaintext_chunk)
+
+    pool.close()
+    pool.join()
 
 if __name__ == '__main__':
     if len(sys.argv) != 5:
@@ -95,13 +88,13 @@ if __name__ == '__main__':
     operation = sys.argv[1]
     input_file = sys.argv[2]
     output_file = sys.argv[3]
-    key = sys.argv[4]
+    key_hex = sys.argv[4]
 
-    if len(key) != 32:
-        print("AES key must be 32 bytes (256 bits) long.")
+    if len(key_hex) != 64:
+        print("AES key must be 32 bytes (256 bits) long in hexadecimal format.")
         sys.exit(1)
 
-    key = bytes.fromhex(key)
+    key = bytes.fromhex(key_hex)
 
     if operation == 'encrypt':
         parallel_encrypt(input_file, output_file, key)

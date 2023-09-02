@@ -38,7 +38,7 @@ Before using this tool, ensure you have the following prerequisites installed:
 To encrypt a file, use the following command:
 
 ```shell
-python parallel_aes.py encrypt <input_file> <output_file> <key>
+python parallel-aes.py encrypt <input_file> <output_file> <key>
 ```
 
 - `<input_file>`: The path to the file you want to encrypt.
@@ -48,7 +48,7 @@ python parallel_aes.py encrypt <input_file> <output_file> <key>
 Example:
 
 ```shell
-python parallel_aes.py encrypt plaintext.txt encrypted.bin 00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff
+python parallel-aes.py encrypt plaintext.txt encrypted_output.txt 00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff
 ```
 
 ### Decryption
@@ -56,7 +56,7 @@ python parallel_aes.py encrypt plaintext.txt encrypted.bin 00112233445566778899a
 To decrypt a file, use the following command:
 
 ```shell
-python parallel_aes.py decrypt <input_file> <output_file> <key>
+python parallel-aes.py decrypt <input_file> <output_file> <key>
 ```
 
 - `<input_file>`: The path to the encrypted file.
@@ -66,7 +66,7 @@ python parallel_aes.py decrypt <input_file> <output_file> <key>
 Example:
 
 ```shell
-python parallel_aes.py decrypt encrypted.bin decrypted.txt 00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff
+python parallel-aes.py decrypt encrypted_output.txt decrypted_output.txt 00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff
 ```
 
 ## Performance Considerations
