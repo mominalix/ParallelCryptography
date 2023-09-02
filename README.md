@@ -21,7 +21,7 @@ To explore and use the projects in this repository, follow these steps:
 1. Clone this repository to your local machine using the following command:
 
    ```shell
-   git clone https://github.com/yourusername/ParallelCryptography.git
+   git clone https://github.com/mominalix/ParallelCryptography.git
    ```
 
 2. Navigate to the specific project folder of your interest, e.g., `Parallel-AES`.
