@@ -11,6 +11,7 @@ This repository houses multiple subprojects, each focusing on specific cryptogra
 ## Projects
 
 - [Parallel-AES](/Parallel-AES)
+- [Password-Bruteforce-CUDA](/Password-Bruteforce-CUDA)
 
 For detailed usage and information about each subproject, please refer to their respective README.md files within their folders.
 
