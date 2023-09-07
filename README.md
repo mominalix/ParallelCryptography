@@ -30,4 +30,4 @@ To explore and use the projects in this repository, follow these steps:
 
 ## Contributing
 
-I welcome contributions from the community to enhance and expand the projects within ParallelCryptography. If you have ideas, bug fixes, or improvements, please feel free to open issues or submit pull requests. Please follow our [Contributing Guidelines](CONTRIBUTING.md) for more details on how to contribute.
+I welcome contributions from the community to enhance and expand the projects within ParallelCryptography. If you have ideas, bug fixes, or improvements, please feel free to open issues or submit pull requests. 
