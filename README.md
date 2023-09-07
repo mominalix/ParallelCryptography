@@ -6,7 +6,7 @@ ParallelCryptography is a repository dedicated to showcasing various implementat
 
 Cryptography plays a crucial role in securing data, communications, and digital systems. High-performance computing, including parallel processing on multi-core CPUs and GPUs, can significantly improve the speed and efficiency of cryptographic operations. 
 
-This repository houses multiple subprojects, each focusing on specific cryptographic algorithms and techniques optimized for parallel processing. Whether you're interested in encryption, decryption, hashing, or other cryptographic tasks, you'll find practical implementations and tools here.
+This repository houses multiple subprojects, each focusing on specific cryptographic algorithms and techniques optimized for parallel processing. Whether you're interested in bruteforce, encryption, decryption, hashing, or other cryptographic tasks, you'll find practical implementations and tools here.
 
 ## Projects
 
